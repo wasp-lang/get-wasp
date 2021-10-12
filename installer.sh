@@ -105,7 +105,7 @@ install_from_bin_package() {
         fi
     fi
     if [ ! -z "$OCCUPIED_PATH_ERRORS" ]; then
-        die "\nInstallation failed!\n\n${OCCUPIED_PATH_ERRORS}\nRemove listed entries manually or run the installer with --force flag to write over them:\n\n  ${BOLD}curl -sSL http://get.wasp-lang.dev/installer.sh | sh -s -- --force${RESET}\n"
+        die "\nInstallation failed!\n\n${OCCUPIED_PATH_ERRORS}\nRemove listed entries manually or run the installer with --force flag to write over them:\n\n  ${BOLD}curl -sSL https://get.wasp-lang.dev/installer.sh | sh -s -- --force${RESET}\n"
     fi
 
     info "Installing Wasp data to $DATA_DST_DIR/wasp."
