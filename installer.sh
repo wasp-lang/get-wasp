@@ -221,7 +221,8 @@ on_path() {
 }
 
 send_telemetry() {
-    DATA='{ "api_key": "CdDd2A0jKTI2vFAsrI9JWm3MqpOcgHz1bMyogAcwsE4", "type": "capture", "event": "install-script:run", "distinct_id": "'$RANDOM`date +'%s%N'`'", "properties": { "os": "'`get_os_info`'" } }'
+    POSTHOG_WASP_PUBLIC_API_KEY='CdDd2A0jKTI2vFAsrI9JWm3MqpOcgHz1bMyogAcwsE4'
+    DATA='{ "api_key": "'$POSTHOG_WASP_PUBLIC_API_KEY'", "type": "capture", "event": "install-script:run", "distinct_id": "'$RANDOM`date +'%s%N'`'", "properties": { "os": "'`get_os_info`'" } }'
     URL="https://app.posthog.com/capture"
     HEADER="Content-Type: application/json"
 
