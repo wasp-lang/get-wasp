@@ -7,6 +7,7 @@ HOME_LOCAL_BIN="$HOME/.local/bin"
 HOME_LOCAL_SHARE="$HOME/.local/share"
 WASP_TEMP_DIR=
 FORCE=
+UPDATE=
 
 RED="\033[31m"
 GREEN="\033[32m"
@@ -17,6 +18,10 @@ while [ $# -gt 0 ]; do
     case "$1" in
         -f|--force)
             FORCE="true"
+            shift
+            ;;
+        update)
+            UPDATE="true"
             shift
             ;;
         # -d|--dest)
@@ -63,6 +68,19 @@ get_os_info() {
     esac
 }
 
+request_confirmation()
+{
+  read -r -p "$1 [y/N] " response
+  case "$response" in
+      [yY][eE][sS]|[yY])
+          info "Proceeding."
+          ;;
+      *)
+          die "Aborting."
+          ;;
+  esac
+}
+
 # TODO: Add option to specify which release to download.
 
 # Download a Wasp binary package and install it in $HOME_LOCAL_BIN.
@@ -85,27 +103,42 @@ install_from_bin_package() {
     BIN_DST_DIR="$HOME_LOCAL_BIN"
     create_dir_if_missing "$BIN_DST_DIR"
 
-    # If our install locations are already occupied (by previous wasp installation or smth else),
-    # inform user that they have to clean it up (or if FORCE is set, we do it for them).
+    if [ "$UPDATE" = "true" ]; then
+        if [ -e "$BIN_DST_DIR/wasp" ]; then
+              info "Current wasp version:"
+              $DATA_DST_DIR/wasp/wasp-bin version
+              info "Latest wasp version:"
+              $WASP_TEMP_DIR/wasp/wasp-bin version
+              request_confirmation "Do you want to update?"
 
-    OCCUPIED_PATH_ERRORS=""
-    if [ -e "$DATA_DST_DIR/wasp" ]; then
-        if [ "$FORCE" = "true" ]; then
-            info "Removing already existing $DATA_DST_DIR/wasp."
-            rm -r "$DATA_DST_DIR/wasp"
+              info "Removing already existing $DATA_DST_DIR/wasp."
+              rm -r "$DATA_DST_DIR/wasp"
         else
-            OCCUPIED_PATH_ERRORS=$OCCUPIED_PATH_ERRORS"Directory $DATA_DST_DIR/wasp already exists.\n"
+              request_confirmation "Cannot find wasp, do you want to install it?"
         fi
-    fi
-    if [ -e "$BIN_DST_DIR/wasp" ]; then
-        if [ "$FORCE" = "true" ]; then
-            info "Writing over existing $BIN_DST_DIR/wasp."
-        else
-            OCCUPIED_PATH_ERRORS=$OCCUPIED_PATH_ERRORS"Binary file $BIN_DST_DIR/wasp already exists.\n"
-        fi
-    fi
-    if [ ! -z "$OCCUPIED_PATH_ERRORS" ]; then
-        die "\nInstallation failed!\n\n${OCCUPIED_PATH_ERRORS}\nRemove listed entries manually or run the installer with --force flag to write over them:\n\n  ${BOLD}curl -sSL https://get.wasp-lang.dev/installer.sh | sh -s -- --force${RESET}\n"
+    else
+      # If our install locations are already occupied (by previous wasp installation or smth else),
+      # inform user that they have to clean it up (or if FORCE is set, we do it for them).
+
+      OCCUPIED_PATH_ERRORS=""
+      if [ -e "$DATA_DST_DIR/wasp" ]; then
+          if [ "$FORCE" = "true" ]; then
+              info "Removing already existing $DATA_DST_DIR/wasp."
+              rm -r "$DATA_DST_DIR/wasp"
+          else
+              OCCUPIED_PATH_ERRORS=$OCCUPIED_PATH_ERRORS"Directory $DATA_DST_DIR/wasp already exists.\n"
+          fi
+      fi
+      if [ -e "$BIN_DST_DIR/wasp" ]; then
+          if [ "$FORCE" = "true" ]; then
+              info "Writing over existing $BIN_DST_DIR/wasp."
+          else
+              OCCUPIED_PATH_ERRORS=$OCCUPIED_PATH_ERRORS"Binary file $BIN_DST_DIR/wasp already exists.\n"
+          fi
+      fi
+      if [ ! -z "$OCCUPIED_PATH_ERRORS" ]; then
+          die "\nInstallation failed!\n\n${OCCUPIED_PATH_ERRORS}\nRemove listed entries manually or run the installer with --force flag to write over them:\n\n  ${BOLD}curl -sSL https://get.wasp-lang.dev/installer.sh | sh -s -- --force${RESET}\n"
+      fi
     fi
 
     info "Installing Wasp data to $DATA_DST_DIR/wasp."
@@ -131,7 +164,11 @@ install_from_bin_package() {
         info "      ${BOLD}"'export PATH=$PATH:'"$BIN_DST_DIR${RESET}"
     fi
 
-    info "\n${GREEN}Wasp has been successfully installed! To create your first app, do:${RESET}"
+    if [ "$UPDATE" = "true" ]; then
+        info "\n${GREEN}Wasp has been successfully installed! To create your first app, do:${RESET}"
+    else
+        info "\n${GREEN}Wasp has been successfully updated! To create your first app, do:${RESET}"
+    fi
     if ! on_path "$BIN_DST_DIR"; then
         info " - Add wasp to your PATH as described above."
     fi
