@@ -85,6 +85,21 @@ request_confirmation()
 
 # Download a Wasp binary package and install it in $HOME_LOCAL_BIN.
 install_from_bin_package() {
+    BIN_DST_DIR="$HOME_LOCAL_BIN"
+    echo $BIN_DST_DIR
+    if [ "$UPDATE" = "true" ]; then
+        if [ -e "$BIN_DST_DIR/wasp" ]; then
+              info "Current wasp version:"
+              $BIN_DST_DIR/wasp version
+              info "Latest wasp version:"
+              curl -LIs -o /dev/null -w %{url_effective} https://github.com/wasp-lang/wasp/releases/latest | awk -F/ '{print $NF}'
+              request_confirmation "Do you want to update?"
+        else
+              request_confirmation "Cannot find wasp, do you want to install it?"
+        fi
+        FORCE="true"
+    fi
+
     PACKAGE_URL="https://github.com/wasp-lang/wasp/releases/latest/download/$1"
     make_temp_dir
     info "Downloading binary package to temporary dir and unpacking it there...\n"
@@ -100,45 +115,28 @@ install_from_bin_package() {
     #   But then we need to run some commands below with sudo.
     DATA_DST_DIR="$HOME_LOCAL_SHARE"
     create_dir_if_missing "$DATA_DST_DIR"
-    BIN_DST_DIR="$HOME_LOCAL_BIN"
     create_dir_if_missing "$BIN_DST_DIR"
+    # If our install locations are already occupied (by previous wasp installation or smth else),
+    # inform user that they have to clean it up (or if FORCE is set, we do it for them).
 
-    if [ "$UPDATE" = "true" ]; then
-        if [ -e "$BIN_DST_DIR/wasp" ]; then
-              info "Current wasp version:"
-              $DATA_DST_DIR/wasp/wasp-bin version
-              info "Latest wasp version:"
-              $WASP_TEMP_DIR/wasp/wasp-bin version
-              request_confirmation "Do you want to update?"
-
-              info "Removing already existing $DATA_DST_DIR/wasp."
-              rm -r "$DATA_DST_DIR/wasp"
+    OCCUPIED_PATH_ERRORS=""
+    if [ -e "$DATA_DST_DIR/wasp" ]; then
+        if [ "$FORCE" = "true" ]; then
+            info "Removing already existing $DATA_DST_DIR/wasp."
+            rm -r "$DATA_DST_DIR/wasp"
         else
-              request_confirmation "Cannot find wasp, do you want to install it?"
+            OCCUPIED_PATH_ERRORS=$OCCUPIED_PATH_ERRORS"Directory $DATA_DST_DIR/wasp already exists.\n"
         fi
-    else
-      # If our install locations are already occupied (by previous wasp installation or smth else),
-      # inform user that they have to clean it up (or if FORCE is set, we do it for them).
-
-      OCCUPIED_PATH_ERRORS=""
-      if [ -e "$DATA_DST_DIR/wasp" ]; then
-          if [ "$FORCE" = "true" ]; then
-              info "Removing already existing $DATA_DST_DIR/wasp."
-              rm -r "$DATA_DST_DIR/wasp"
-          else
-              OCCUPIED_PATH_ERRORS=$OCCUPIED_PATH_ERRORS"Directory $DATA_DST_DIR/wasp already exists.\n"
-          fi
-      fi
-      if [ -e "$BIN_DST_DIR/wasp" ]; then
-          if [ "$FORCE" = "true" ]; then
-              info "Writing over existing $BIN_DST_DIR/wasp."
-          else
-              OCCUPIED_PATH_ERRORS=$OCCUPIED_PATH_ERRORS"Binary file $BIN_DST_DIR/wasp already exists.\n"
-          fi
-      fi
-      if [ ! -z "$OCCUPIED_PATH_ERRORS" ]; then
-          die "\nInstallation failed!\n\n${OCCUPIED_PATH_ERRORS}\nRemove listed entries manually or run the installer with --force flag to write over them:\n\n  ${BOLD}curl -sSL https://get.wasp-lang.dev/installer.sh | sh -s -- --force${RESET}\n"
-      fi
+    fi
+    if [ -e "$BIN_DST_DIR/wasp" ]; then
+        if [ "$FORCE" = "true" ]; then
+            info "Writing over existing $BIN_DST_DIR/wasp."
+        else
+            OCCUPIED_PATH_ERRORS=$OCCUPIED_PATH_ERRORS"Binary file $BIN_DST_DIR/wasp already exists.\n"
+        fi
+    fi
+    if [ ! -z "$OCCUPIED_PATH_ERRORS" ]; then
+        die "\nInstallation failed!\n\n${OCCUPIED_PATH_ERRORS}\nRemove listed entries manually or run the installer with --force flag to write over them:\n\n  ${BOLD}curl -sSL https://get.wasp-lang.dev/installer.sh | sh -s -- --force${RESET}\n"
     fi
 
     info "Installing Wasp data to $DATA_DST_DIR/wasp."
