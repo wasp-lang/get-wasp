@@ -20,10 +20,6 @@ while [ $# -gt 0 ]; do
             FORCE="true"
             shift
             ;;
-        update)
-            UPDATE="true"
-            shift
-            ;;
         # -d|--dest)
         #     DEST="$2"
         #     shift 2
@@ -68,38 +64,29 @@ get_os_info() {
     esac
 }
 
-request_confirmation()
+want_update()
 {
-  read -r -p "$1 [y/N] " response
-  case "$response" in
-      [yY][eE][sS]|[yY])
-          info "Proceeding."
-          ;;
-      *)
-          die "Aborting."
-          ;;
-  esac
+    if [ -z $UPDATE ]; then
+        info "Current wasp version:"
+        $HOME_LOCAL_BIN/wasp version
+        info "Latest wasp version:"
+        curl -LIs -o /dev/null -w %{url_effective} https://github.com/wasp-lang/wasp/releases/latest | awk -F/ '{print $NF}'
+        read -r -p "Do you want to update? [y/N] " response
+        case "$response" in
+            [yY][eE][sS]|[yY])
+                UPDATE="true"
+                ;;
+            *)
+                UPDATE="false"
+                ;;
+        esac
+    fi
 }
 
 # TODO: Add option to specify which release to download.
 
 # Download a Wasp binary package and install it in $HOME_LOCAL_BIN.
 install_from_bin_package() {
-    BIN_DST_DIR="$HOME_LOCAL_BIN"
-    echo $BIN_DST_DIR
-    if [ "$UPDATE" = "true" ]; then
-        if [ -e "$BIN_DST_DIR/wasp" ]; then
-              info "Current wasp version:"
-              $BIN_DST_DIR/wasp version
-              info "Latest wasp version:"
-              curl -LIs -o /dev/null -w %{url_effective} https://github.com/wasp-lang/wasp/releases/latest | awk -F/ '{print $NF}'
-              request_confirmation "Do you want to update?"
-        else
-              request_confirmation "Cannot find wasp, do you want to install it?"
-        fi
-        FORCE="true"
-    fi
-
     PACKAGE_URL="https://github.com/wasp-lang/wasp/releases/latest/download/$1"
     make_temp_dir
     info "Downloading binary package to temporary dir and unpacking it there...\n"
@@ -115,6 +102,7 @@ install_from_bin_package() {
     #   But then we need to run some commands below with sudo.
     DATA_DST_DIR="$HOME_LOCAL_SHARE"
     create_dir_if_missing "$DATA_DST_DIR"
+    BIN_DST_DIR="$HOME_LOCAL_BIN"
     create_dir_if_missing "$BIN_DST_DIR"
     # If our install locations are already occupied (by previous wasp installation or smth else),
     # inform user that they have to clean it up (or if FORCE is set, we do it for them).
@@ -125,14 +113,23 @@ install_from_bin_package() {
             info "Removing already existing $DATA_DST_DIR/wasp."
             rm -r "$DATA_DST_DIR/wasp"
         else
+          want_update
+          if [ $UPDATE = "true" ]; then
+            info "Removing already existing $DATA_DST_DIR/wasp."
+            rm -r "$DATA_DST_DIR/wasp"
+          else
             OCCUPIED_PATH_ERRORS=$OCCUPIED_PATH_ERRORS"Directory $DATA_DST_DIR/wasp already exists.\n"
+          fi
         fi
     fi
     if [ -e "$BIN_DST_DIR/wasp" ]; then
         if [ "$FORCE" = "true" ]; then
             info "Writing over existing $BIN_DST_DIR/wasp."
         else
+          want_update
+          if [ $UPDATE != "true" ]; then
             OCCUPIED_PATH_ERRORS=$OCCUPIED_PATH_ERRORS"Binary file $BIN_DST_DIR/wasp already exists.\n"
+          fi
         fi
     fi
     if [ ! -z "$OCCUPIED_PATH_ERRORS" ]; then
