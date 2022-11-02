@@ -137,7 +137,6 @@ install_from_bin_package() {
     fi
     info " - ${BOLD}wasp new MyApp${RESET}\n"
 
-    info "\n"
     info "Additionally, you can install bash completion for wasp by running ${BOLD}wasp completion${RESET} and following the instructions."
 }
 
