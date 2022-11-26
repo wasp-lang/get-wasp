@@ -128,6 +128,8 @@ install_from_bin_package() {
         die "Failed to make $BIN_DST_DIR/wasp executable."
     fi
 
+    info "\n=============================================="
+
     if ! on_path "$BIN_DST_DIR"; then
         info "\n${RED}WARNING${RESET}: It looks like '$BIN_DST_DIR' is not on your PATH! You will not be able to invoke wasp from the terminal by its name."
         info "  You can add it to your PATH by adding following line into your profile file (~/.profile or ~/.zshrc or ~/.bash_profile or ~/.bashrc or some other, depending on your configuration):"
@@ -140,7 +142,8 @@ install_from_bin_package() {
     fi
     info " - ${BOLD}wasp new MyApp${RESET}\n"
 
-    info "Additionally, you can install bash completion for wasp by running ${BOLD}wasp completion${RESET} and following the instructions."
+    info "Optional:"
+    info " - to install bash completion for wasp, run ${BOLD}wasp completion${RESET} and follow the instructions."
 }
 
 create_dir_if_missing() {
