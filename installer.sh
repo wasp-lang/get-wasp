@@ -3,8 +3,19 @@
 # NOTE: Heavily inspired by get-stack.hs script for installing stack.
 # https://raw.githubusercontent.com/commercialhaskell/stack/stable/etc/scripts/get-stack.sh
 
-HOME_LOCAL_BIN="$HOME/.local/bin"
-HOME_LOCAL_SHARE="$HOME/.local/share"
+# Default install directory
+INSTALL_DIR="$HOME"
+
+while getopts ":d:" opt; do
+  case $opt in
+    d) INSTALL_DIR="$OPTARG" ;;
+    *) echo "Invalid argument: -$OPTARG" >&2; exit 1 ;;
+  esac
+done
+
+# Assign the directories 
+HOME_LOCAL_BIN="$INSTALL_DIR/.local/bin"
+HOME_LOCAL_SHARE="$INSTALL_DIR/.local/share"
 WASP_TEMP_DIR=
 VERSION_ARG=
 
@@ -15,10 +26,10 @@ RESET="\033[0m"
 
 while [ $# -gt 0 ]; do
     case "$1" in
-        # -d|--dest)
-        #     DEST="$2"
-        #     shift 2
-        #     ;;
+        -d|--dest)
+            INSTALL_DIR="$2"
+            shift 2
+            ;;
         -v|--version)
             VERSION_ARG="$2"
             shift 2
