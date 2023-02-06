@@ -3,6 +3,9 @@
 # NOTE: Heavily inspired by get-stack.hs script for installing stack.
 # https://raw.githubusercontent.com/commercialhaskell/stack/stable/etc/scripts/get-stack.sh
 
+# NOTE: These paths are used in the Wasp uninstall command, if you change it here,
+#       change it there as well.
+#       Link to Uninstall command: https://github.com/wasp-lang/wasp/blob/main/waspc/cli/src/Wasp/Cli/FileSystem.hs#L36
 HOME_LOCAL_BIN="$HOME/.local/bin"
 HOME_LOCAL_SHARE="$HOME/.local/share"
 WASP_TEMP_DIR=
