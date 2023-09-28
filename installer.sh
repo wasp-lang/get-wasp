@@ -99,7 +99,7 @@ install_from_bin_package() {
         PACKAGE_URL="https://github.com/wasp-lang/wasp/releases/download/v${VERSION_TO_INSTALL}/${BIN_PACKAGE_NAME}"
         make_temp_dir
         info "Downloading binary package to temporary dir and unpacking it there...\n"
-        dl_to_file "$PACKAGE_URL" "$WASP_TEMP_DIR/$BIN_PACKAGE_NAME" "Installation failed: There is no wasp version $VERSION_TO_INSTALL"
+        dl_to_file "$PACKAGE_URL" "$WASP_TEMP_DIR/$BIN_PACKAGE_NAME"
         echo ""
 
         info "Installing wasp data to $DATA_DST_DIR.\n"
@@ -187,27 +187,16 @@ info() {
 dl_to_file() {
     FILE_URL="$1"
     DST="$2"
-    MSG_ON_404="$3"
 
     if has_curl ; then
-        OUTPUT=$(curl ${QUIET:+-sS} --fail -L -o "$DST" "$FILE_URL")
+        curl ${QUIET:+-sS} --fail -L -o "$DST" "$FILE_URL"
         if [ $? -ne 0 ]; then
-            echo "$OUTPUT" | grep --quiet 'The requested URL returned error: 404'
-            if [ $? -ne 0 ]; then
-                die "$MSG_ON_404"
-            else
-                die "curl download failed: $FILE_URL"
-            fi
+            die "failed while trying to download $FILE_URL to $DST via curl"
         fi
     elif has_wget ; then
-        OUTPUT=$(wget ${QUIET:+-q} "-O$DST" "$FILE_URL")
+        wget ${QUIET:+-q} "-O$DST" "$FILE_URL"
         if [ $? -ne 0 ]; then
-            echo "$OUTPUT" | grep --quiet 'ERROR 404: Not Found'
-            if [ $? -ne 0 ]; then
-                die "$MSG_ON_404"
-            else
-                die "wget download failed: $FILE_URL"
-            fi
+            die "failed while trying to download $FILE_URL to $DST via wget"
         fi
     else
         die "Neither wget nor curl is available, please install one to continue."
