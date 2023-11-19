@@ -37,6 +37,7 @@ main() {
     trap cleanup_temp_dir EXIT
     send_telemetry > /dev/null 2>&1 &
     install_based_on_os
+    check_for_rosetta
 }
 
 install_based_on_os() {
