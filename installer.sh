@@ -37,6 +37,7 @@ main() {
     trap cleanup_temp_dir EXIT
     send_telemetry > /dev/null 2>&1 &
     install_based_on_os
+    check_for_rosetta
 }
 
 install_based_on_os() {
@@ -64,6 +65,17 @@ get_os_info() {
             echo "Unknown"
             ;;
     esac
+}
+
+check_for_rosetta() {
+    # check if apple silicon
+    if [ "$(get_os_info)" = "osx" ] && [ "$(uname -m)" = "arm64" ]; then
+        # check if rosetta is installed
+        pgrep -q oahd
+        if [ $? -ne 0 ]; then
+            info "We detected Apple Silicon without Rosetta installed. Make sure to install Rosetta due to compatibility - ${BOLD}softwareupdate --install-rosetta${RESET}"
+        fi
+    fi
 }
 
 # Download a Wasp binary package and install it in $HOME_LOCAL_BIN.
