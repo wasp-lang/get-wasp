@@ -66,6 +66,17 @@ get_os_info() {
     esac
 }
 
+check_for_rosetta() {
+    # check if apple silicon
+    if [ "$(get_os_info)" = "osx" ] && [ "$(uname -m)" = "arm64" ]; then
+        # check if rosetta is installed
+        pgrep -q oahd
+        if [ $? -ne 0 ]; then
+            info "We detected Apple Silicon without Rosetta installed. Make sure to install Rosetta due to compatibility - ${BOLD}softwareupdate --install-rosetta${RESET}"
+        fi
+    fi
+}
+
 # Download a Wasp binary package and install it in $HOME_LOCAL_BIN.
 install_from_bin_package() {
     BIN_PACKAGE_NAME=$1
