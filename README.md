@@ -1,5 +1,7 @@
 # get-wasp
 
+NOTE: This repo has been deprecated since wasp moved from wasp-lang.dev to wasp.sh domain. New repo is now get-wasp-sh.
+
 This repo is used as a way to publish static wasp resources, primarily installer script.
 
 Anything that you put here in master branch will be available under get.wasp-lang.dev/ (via Github Pages).
